@@ -1,6 +1,6 @@
 'use client' // 声明为客户端组件
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Table, Input, Button, Slider, Form, message } from 'antd'
 import { isIncludedInRollout, VariationRange } from '@/utils'
 
@@ -12,14 +12,20 @@ const InputOutputTable = () => {
   const [result, setResult] = useState<any[]>([])
   const [range, setRange] = useState<VariationRange>([0, 0]) // 范围选择器的值
 
+  const idList = useMemo(() => ids.split('\n').map(id => id.trim()).filter(id => id !== ''), [ids])
+
+  // 计算结果
   const handleCalculate = () => {
-    // 校验必填项
     if (!key || !ids.trim()) {
       message.error('Key 和 IDs 是必填项！')
       return
     }
 
-    const idList = ids.split('\n').filter(id => id.trim() !== '')
+    if (idList.length === 0) {
+      message.error('请输入有效的 IDs，每行一个')
+      return
+    }
+
     const finalRange = range.map(v => v / 100) as VariationRange
     const calculatedResult = idList
       .filter(id => {
@@ -34,7 +40,7 @@ const InputOutputTable = () => {
 
   const columns = [
     {
-      title: 'Result',
+      title: `Result (${result.length})`,
       dataIndex: 'result',
       key: 'result',
     },
@@ -63,7 +69,7 @@ const InputOutputTable = () => {
 
           {/* IDs 输入 */}
           <Form.Item
-            label="IDs"
+            label={`IDs (${idList.length})`}
             required
             rules={[{ required: true, message: '请输入 IDs，每行一个' }]}
           >
