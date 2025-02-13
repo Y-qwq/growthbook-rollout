@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { Table, Input, Button, Slider, Form, message } from 'antd'
-import { isIncludedInRollout, VariationRange } from '@/utils'
+import { isIncludedInRollout } from '@/utils'
 
 const { TextArea } = Input
 
@@ -10,9 +10,16 @@ const InputOutputTable = () => {
   const [key, setKey] = useState('')
   const [ids, setIds] = useState('')
   const [result, setResult] = useState<any[]>([])
-  const [range, setRange] = useState<VariationRange>([0, 0]) // 范围选择器的值
+  const [range, setRange] = useState<[number, number]>([0, 0]) // 范围选择器的值
 
-  const idList = useMemo(() => ids.split('\n').map(id => id.trim()).filter(id => id !== ''), [ids])
+  const idList = useMemo(
+    () =>
+      ids
+        .split('\n')
+        .map(id => id.trim())
+        .filter(id => id !== ''),
+    [ids]
+  )
 
   // 计算结果
   const handleCalculate = () => {
@@ -26,11 +33,8 @@ const InputOutputTable = () => {
       return
     }
 
-    const finalRange = range.map(v => v / 100) as VariationRange
     const calculatedResult = idList
-      .filter(id => {
-        return isIncludedInRollout(id, key, finalRange, undefined, undefined)
-      })
+      .filter(id => isIncludedInRollout(key, id, [range[0] / 100, range[1] / 100]))
       .map((id, index) => ({
         key: index,
         result: id,
@@ -54,11 +58,7 @@ const InputOutputTable = () => {
         {/* Form */}
         <Form layout="vertical" onFinish={handleCalculate}>
           {/* Key 输入 */}
-          <Form.Item
-            label="Key"
-            required
-            rules={[{ required: true, message: '请输入 Key' }]}
-          >
+          <Form.Item label="Key" required rules={[{ required: true, message: '请输入 Key' }]}>
             <Input
               placeholder="请输入 Key"
               value={key}
@@ -84,13 +84,15 @@ const InputOutputTable = () => {
 
           {/* 范围选择器 */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">范围选择 (0-100%)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              范围选择 (0-100%)
+            </label>
             <Slider
               range
               min={0}
               max={100}
               value={range}
-              onChange={value => setRange(value as VariationRange)}
+              onChange={value => setRange(value as [number, number])}
               className="w-full"
             />
             <div className="text-sm text-gray-600 mt-2">
